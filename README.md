@@ -1,44 +1,44 @@
 # PupPace: Your Smart Walk & Run Companion
 
-PupPace is an innovative web app for dog owners that transforms your daily walk into a personalized experience. It not only helps you plan the best time to go out by analyzing weather and your dog's breed, but it also acts as an active companion during your walk.
+PupPace is a web app I built for dog owners that makes your daily walks way more fun. It checks the weather and your dog's breed to suggest the best times to go out, and then acts as your walking buddy with music that changes based on your pace.
 
-Start a session, set your pace, and PupPace curates a dynamic Spotify playlist that matches your energy in real-time.
+Just start a walk, pick your speed, and PupPace creates a Spotify playlist that keeps up with you.
 
 ## ✨ Features
 
-* **Smart Walk Planner**: Recommends the best times to walk your dog based on local weather forecasts and breed-specific needs.
-* **The Benji Meter**: A clear, color-coded safety score for current weather conditions.
+* **Smart Walk Planner**: Figures out the best times to walk based on weather and what your dog likes.
+* **The Benji Meter**: Simple color-coded safety score for the current weather.
 * **Active Walk Mode**:
-    * **Live Timer**: Track the duration of your walk or run.
-    * **Pace Control**: Choose your intensity (Stroll, Brisk, Jog), and the music adapts instantly.
-    * **Dynamic PupPace Playlists**: Real-time Spotify playlist generation based on weather, your dog's energy, and *your current pace*.
-* **Post-Walk Summary**: Get a summary of your walk duration and save your uniquely generated playlist.
-* **Dog Breed Trivia**: A fun trivia game to keep you entertained on your walk.
+    * **Live Timer**: Keeps track of how long you've been walking.
+    * **Pace Control**: Pick your intensity (Stroll, Brisk, Jog) and the music changes right away.
+    * **Dynamic PupPace Playlists**: Creates Spotify playlists based on weather, your dog's energy, and how fast you're walking.
+* **Post-Walk Summary**: Shows you how long you walked and saves your custom playlist.
+* **Dog Breed Trivia**: Fun quiz game to play while you're out walking.
 
 ## 🛠️ Tech Stack
 
 * **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 * **Build Tool**: Vite
 * **APIs**:
-    * [Open-Meteo](https://open-meteo.com/): Weather forecasting.
-    * [TheDogAPI](https://thedogapi.com/): Dog breed information.
-    * [Spotify Web API](https://developer.spotify.com/documentation/web-api): Dynamic music curation.
+    * [Open-Meteo](https://open-meteo.com/): Weather data
+    * [TheDogAPI](https://thedogapi.com/): Dog breed info
+    * [Spotify Web API](https://developer.spotify.com/documentation/web-api): Music playlists
 
 ## 🚀 Getting Started
 
-Follow these instructions to get the project running on your local machine.
+Here's how to get this running locally.
 
 ### Prerequisites
 
-* Node.js and npm installed.
-* A modern web browser that supports the Geolocation API (for future distance tracking).
-* API keys for TheDogAPI and Spotify.
+* Node.js and npm
+* Modern web browser
+* API keys from Spotify and TheDogAPI
 
 ### Installation & Setup
 
-1.  **Clone the repository:**
+1.  **Clone the repo:**
     ```bash
-    git clone [https://github.com/your-username/puppace.git](https://github.com/your-username/puppace.git)
+    git clone https://github.com/your-username/puppace.git
     cd puppace
     ```
 
@@ -47,19 +47,19 @@ Follow these instructions to get the project running on your local machine.
     npm install
     ```
 
-3.  **Set up environment variables:**
-    * Create a file named `.env` in the project root.
-    * Copy the contents of `.env.example` into your new `.env` file.
-    * Obtain your API keys from [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/) and [TheDogAPI](https://thedogapi.com/signup).
-    * Fill in your `.env` file with your credentials:
+3.  **Set up your API keys:**
+    * Create a `.env` file in the project root
+    * Copy from `.env.example`
+    * Get your keys from [Spotify Dashboard](https://developer.spotify.com/dashboard/) and [TheDogAPI](https://thedogapi.com/signup)
+    * Add them to your `.env` file:
         ```env
         SPOTIFY_CLIENT_ID=YourSpotifyClientID
         SPOTIFY_CLIENT_SECRET=YourSpotifyClientSecret
         THEDOGAPI_KEY=YourDogAPIKey
         ```
 
-4.  **Run the development server:**
+4.  **Start the dev server:**
     ```bash
     npm run dev
     ```
-    The app will be available at the local URL provided by Vite (e.g., `http://localhost:5173`).
+    The app will run at whatever URL Vite gives you (usually `http://localhost:5173`).

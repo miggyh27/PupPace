@@ -39,9 +39,9 @@ header p { font-size: 1rem; color: var(--dark-gray); }
     box-shadow: var(--shadow);
 }
 
-.input-group { margin-bottom: 20px; }
+.input-group { margin-bottom: 20px; position: relative; }
 .input-group label { display: block; font-weight: 600; margin-bottom: 8px; }
-input[type="text"], select {
+input[type="text"] {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--light-gray);
@@ -49,10 +49,42 @@ input[type="text"], select {
     font-family: var(--font-family);
     font-size: 1rem;
 }
-input[type="text"]:focus, select:focus {
+input[type="text"]:focus {
     outline: none;
     border-color: var(--primary-accent);
     box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.2);
+}
+
+.breed-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--light-gray);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.breed-suggestion {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--light-gray);
+    transition: background-color 0.2s;
+}
+
+.breed-suggestion:hover,
+.breed-suggestion:focus,
+.breed-suggestion.focused {
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+}
+
+.breed-suggestion:last-child {
+    border-bottom: none;
 }
 
 button {
