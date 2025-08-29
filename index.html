@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PupPace</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1>PupPace 🐾</h1>
+            <p id="app-tagline">Your smart walk & run companion.</p>
+        </header>
+
+        <main>
+            <div id="planning-view">
+                <section id="setup-section" class="card">
+                    <h2>Plan Your Walk</h2>
+                    <div class="input-group">
+                        <label for="city-input">Enter Your City</label>
+                        <input type="text" id="city-input" placeholder="e.g., San Francisco">
+                    </div>
+                    <div class="input-group">
+                        <label for="breed-select">Choose a Dog Breed</label>
+                        <select id="breed-select">
+                            <option value="">Loading breeds...</option>
+                        </select>
+                    </div>
+                    <button id="plan-walk-btn">Find Best Walk Times</button>
+                </section>
+
+                <div id="loader" class="hidden"></div>
+                <div id="error-container" class="hidden"></div>
+
+                <section id="results-section" class="hidden">
+                    <div id="weather-card" class="card">
+                        <h2>Forecast for <span id="location-name">Your City</span></h2>
+                        <div class="benji-meter">
+                            <p>Current Benji Meter:</p>
+                            <div id="benji-score" class="score-circle">--</div>
+                            <span id="benji-label"></span>
+                        </div>
+                        <h4>Recommended Walk Windows:</h4>
+                        <div id="walk-times-container">
+                            </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="active-walk-view" class="hidden">
+                <div class="card active-walk-card">
+                    <div class="timer-display">
+                        <span id="timer">00:00</span>
+                    </div>
+                    <p class="pace-prompt">Set your pace to match the music!</p>
+                    <div id="pace-controls">
+                        <button class="pace-btn" data-pace="stroll">🐾 Stroll</button>
+                        <button class="pace-btn active" data-pace="brisk">🐾🐾 Brisk</button>
+                        <button class="pace-btn" data-pace="jog">🐾🐾🐾 Jog</button>
+                    </div>
+                    <div id="spotify-embed-container">
+                        </div>
+                    <button id="finish-walk-btn">Finish Walk</button>
+                </div>
+                <button id="trivia-btn">Play Doggo Trivia!</button>
+            </div>
+
+            <div id="summary-view" class="hidden">
+                <div class="card summary-card">
+                    <h2>Walk Complete!</h2>
+                    <p>Great job! You and your pup walked for <strong id="summary-duration">0 minutes</strong>.</p>
+                    <div id="summary-playlist">
+                        <p>Here's your personalized PupPace playlist:</p>
+                        </div>
+                    <button id="start-new-walk-btn">Plan Another Walk</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="trivia-modal" class="hidden">
+        <div class="modal-content">
+            <span id="close-modal-btn">×</span>
+            <h2>Doggo Trivia!</h2>
+            <div id="trivia-question"></div>
+            <div id="trivia-options"></div>
+            <button id="next-trivia-btn" class="hidden">Next Fact</button>
+        </div>
+    </div>
+</body>
+</html>
