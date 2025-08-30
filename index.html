@@ -13,8 +13,13 @@
 <body>
     <div id="app-container">
         <header>
-            <h1>PupPace 🐾</h1>
-            <p id="app-tagline">Your smart walk & run companion.</p>
+            <div class="header-content">
+                <div>
+                    <h1>PupPace 🐾</h1>
+                    <p id="app-tagline">Your smart walk & run companion.</p>
+                </div>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">🌙</button>
+            </div>
         </header>
 
         <main>
@@ -24,6 +29,10 @@
                     <div class="input-group">
                         <label for="city-input">Enter Your City</label>
                         <input type="text" id="city-input" placeholder="e.g., San Francisco">
+                    </div>
+                    <div class="input-group">
+                        <label for="pet-name-input">Pet's Name</label>
+                        <input type="text" id="pet-name-input" placeholder="e.g., Max, Luna, Buddy">
                     </div>
                     <div class="input-group">
                         <label for="breed-input">Dog Breed</label>
@@ -66,13 +75,16 @@
                         </div>
                     <button id="finish-walk-btn">Finish Walk</button>
                 </div>
-                <button id="trivia-btn">Play Doggo Trivia!</button>
+                <div class="game-buttons">
+                    <button id="trivia-btn">Play Doggo Trivia!</button>
+                    <button id="photo-game-btn">Guess the Breed!</button>
+                </div>
             </div>
 
             <div id="summary-view" class="hidden">
                 <div class="card summary-card">
                     <h2>Walk Complete!</h2>
-                    <p>Great job! You and your pup walked for <strong id="summary-duration">0 minutes</strong>.</p>
+                    <p>Great job! You and <strong id="pet-name-display">your pup</strong> walked for <strong id="summary-duration">0 minutes</strong>.</p>
                     <div id="summary-playlist">
                         <p>Here's your personalized PupPace playlist:</p>
                         </div>
@@ -88,7 +100,7 @@
             <h2>Doggo Trivia!</h2>
             <div id="trivia-question"></div>
             <div id="trivia-options"></div>
-            <button id="next-trivia-btn" class="hidden">Next Fact</button>
+            <button id="next-trivia-btn" class="hidden">Next</button>
         </div>
     </div>
 </body>

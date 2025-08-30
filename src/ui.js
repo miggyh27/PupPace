@@ -1,6 +1,6 @@
-// UI rendering and interactions
+// All the UI functions for showing/hiding stuff and handling user input
 
-// Cache DOM elements for performance
+// Grab references to important page elements
 const loader = document.getElementById('loader');
 const errorContainer = document.getElementById('error-container');
 const breedInput = document.getElementById('breed-input');
@@ -19,198 +19,301 @@ const triviaQuestion = document.getElementById('trivia-question');
 const triviaOptions = document.getElementById('trivia-options');
 const nextTriviaBtn = document.getElementById('next-trivia-btn');
 
-// Show loading state
+// Show/hide the loading spinner
 export function showLoader() {
-    loader.classList.remove('hidden');
-    errorContainer.classList.add('hidden');
-    resultsSection.classList.add('hidden');
+  loader.classList.remove('hidden');
+  errorContainer.classList.add('hidden');
+  resultsSection.classList.add('hidden');
 }
-
 export function hideLoader() {
-    loader.classList.add('hidden');
+  loader.classList.add('hidden');
 }
 
-// Show error message
+// Show error messages to the user
 export function displayError(message) {
-    hideLoader();
-    errorContainer.textContent = `⚠️ ${message}`;
-    errorContainer.classList.remove('hidden');
+  hideLoader();
+  errorContainer.textContent = `⚠️ ${message}`;
+  errorContainer.classList.remove('hidden');
 }
 
-// Set up breed autocomplete
-export function setupBreedAutocomplete(breeds) {
-    let currentFocus = -1;
+// Set up breed search with keyboard navigation and suggestions
+export function setupBreedAutocomplete(breeds, initial = '') {
+  if (initial) breedInput.value = initial;
 
-    breedInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        breedSuggestions.innerHTML = '';
-        currentFocus = -1;
+  let currentFocus = -1;
+  let debTimer = null;
 
-        if (!query) {
-            breedSuggestions.classList.add('hidden');
-            return;
-        }
+  breedInput.setAttribute('role', 'combobox');
+  breedInput.setAttribute('aria-expanded', 'false');
+  breedSuggestions.setAttribute('role', 'listbox');
 
-        const matches = breeds.filter(breed =>
-            breed.name.toLowerCase().includes(query)
-        ).slice(0, 5); // Limit to 5 suggestions
+  const renderMatches = (query) => {
+    breedSuggestions.innerHTML = '';
+    currentFocus = -1;
 
-        if (matches.length > 0) {
-            matches.forEach((breed, index) => {
-                const suggestion = document.createElement('div');
-                suggestion.className = 'breed-suggestion';
-                suggestion.textContent = breed.name;
-                suggestion.addEventListener('click', () => {
-                    breedInput.value = breed.name;
-                    breedSuggestions.classList.add('hidden');
-                });
-                breedSuggestions.appendChild(suggestion);
-            });
-            breedSuggestions.classList.remove('hidden');
-        } else {
-            breedSuggestions.classList.add('hidden');
-        }
-    });
+    const list = breeds
+      .filter(b => b.name.toLowerCase().includes(query))
+      .slice(0, 7);
 
-        breedInput.addEventListener('keydown', (e) => {
-        const suggestions = breedSuggestions.children;
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            currentFocus = currentFocus < suggestions.length - 1 ? currentFocus + 1 : 0;
-            updateFocus(suggestions, currentFocus);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            currentFocus = currentFocus > 0 ? currentFocus - 1 : suggestions.length - 1;
-            updateFocus(suggestions, currentFocus);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (currentFocus >= 0 && suggestions[currentFocus]) {
-                suggestions[currentFocus].click();
-            }
-        } else if (e.key === 'Escape') {
-            breedSuggestions.classList.add('hidden');
-            currentFocus = -1;
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!breedInput.contains(e.target) && !breedSuggestions.contains(e.target)) {
-            breedSuggestions.classList.add('hidden');
-        }
-    });
-}
-
-function updateFocus(suggestions, index) {
-    Array.from(suggestions).forEach(suggestion => {
-        suggestion.classList.remove('focused');
-    });
-
-    if (suggestions[index]) {
-        suggestions[index].classList.add('focused');
-    }
-}
-
-// Render walk recommendations
-export function renderWalkTimes(walkWindows, location) {
-    locationName.textContent = location;
-
-    const { score, label, className } = walkWindows.benjiMeter;
-    benjiScoreEl.textContent = score;
-    benjiLabel.textContent = label;
-    benjiScoreEl.className = `score-circle ${className}`;
-
-    walkTimesContainer.innerHTML = '';
-
-    if (walkWindows.recommendations.length === 0) {
-        walkTimesContainer.innerHTML = '<p>No good walk times found. Weather might be too extreme.</p>';
-    } else {
-        walkWindows.recommendations.forEach(rec => {
-            const timeSlot = document.createElement('div');
-            timeSlot.className = 'walk-time-entry';
-            timeSlot.innerHTML = `
-                <div class="time-details">
-                    <div class="time">${rec.time}</div>
-                    <div class="details">${rec.temp}°F, ${rec.precip}% precipitation risk</div>
-                </div>
-                <button class="start-walk-btn" data-time-index="${rec.hourIndex}">Start Walk</button>
-            `;
-            walkTimesContainer.appendChild(timeSlot);
-        });
+    if (!list.length) {
+      breedSuggestions.classList.add('hidden');
+      breedInput.setAttribute('aria-expanded', 'false');
+      return;
     }
 
-    resultsSection.classList.remove('hidden');
+    for (const breed of list) {
+      const item = document.createElement('div');
+      item.className = 'breed-suggestion';
+      item.setAttribute('role', 'option');
+
+      const idx = breed.name.toLowerCase().indexOf(query);
+      if (idx >= 0) {
+        const before = breed.name.slice(0, idx);
+        const match = breed.name.slice(idx, idx + query.length);
+        const after = breed.name.slice(idx + query.length);
+        item.innerHTML = `${escapeHtml(before)}<strong>${escapeHtml(match)}</strong>${escapeHtml(after)}`;
+      } else {
+        item.textContent = breed.name;
+      }
+
+      item.addEventListener('click', () => {
+        breedInput.value = breed.name;
+        breedSuggestions.classList.add('hidden');
+        breedInput.setAttribute('aria-expanded', 'false');
+      });
+      breedSuggestions.appendChild(item);
+    }
+
+    breedSuggestions.classList.remove('hidden');
+    breedInput.setAttribute('aria-expanded', 'true');
+  };
+
+  breedInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    clearTimeout(debTimer);
+    if (!query) {
+      breedSuggestions.classList.add('hidden');
+      breedInput.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    debTimer = setTimeout(() => renderMatches(query), 140);
+  });
+
+  breedInput.addEventListener('keydown', (e) => {
+    const suggestions = Array.from(breedSuggestions.children);
+    if (!suggestions.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      currentFocus = (currentFocus + 1) % suggestions.length;
+      updateFocus(suggestions, currentFocus);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      currentFocus = (currentFocus - 1 + suggestions.length) % suggestions.length;
+      updateFocus(suggestions, currentFocus);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      suggestions[currentFocus]?.click();
+    } else if (e.key === 'Escape') {
+      breedSuggestions.classList.add('hidden');
+      breedInput.setAttribute('aria-expanded', 'false');
+      currentFocus = -1;
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!breedInput.contains(e.target) && !breedSuggestions.contains(e.target)) {
+      breedSuggestions.classList.add('hidden');
+      breedInput.setAttribute('aria-expanded', 'false');
+    }
+  });
 }
 
-// Update timer display
+function updateFocus(nodes, i) {
+  nodes.forEach(n => n.classList.remove('focused'));
+  if (nodes[i]) nodes[i].classList.add('focused');
+}
+function escapeHtml(s) { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+// Show the weather forecast and best walking times
+export function renderWalkTimes(walk, location) {
+  locationName.textContent = location;
+
+  const { score, label, className } = walk.benjiMeter;
+  benjiScoreEl.textContent = score;
+  benjiLabel.textContent = label;
+  benjiScoreEl.className = `score-circle ${className}`;
+
+  walkTimesContainer.innerHTML = '';
+
+  const grid = document.createElement('div');
+  grid.className = 'walk-times-grid';
+
+  if (walk.topRecommendations.length) {
+    const topHeader = document.createElement('h4');
+    topHeader.textContent = '🏆 Best Walk Windows Today';
+    walkTimesContainer.appendChild(topHeader);
+
+    walk.topRecommendations.forEach(win => {
+      const el = document.createElement('div');
+      el.className = 'walk-time-entry top-recommendation';
+      el.innerHTML = `
+        <div class="time-details">
+          <div class="time">${win.startTime}–${win.endTime} · ${win.label}</div>
+          <div class="weather-info">
+            <span class="weather-item">Avg score: ${win.avgScore}</span>
+            <span class="weather-item">Length: ${win.length}h</span>
+          </div>
+          <div class="score-badge score-great">${win.best}/10</div>
+        </div>
+        <button class="start-walk-btn" data-time-index="${win.startIndex}" title="Start at the beginning of this window">Start Walk</button>
+      `;
+      grid.appendChild(el);
+    });
+  }
+
+  const nextHeader = document.createElement('h4');
+  nextHeader.textContent = '📅 Next 12 Hours';
+  walkTimesContainer.appendChild(nextHeader);
+
+  walk.currentAndNext.forEach(rec => {
+    const el = document.createElement('div');
+    el.className = 'walk-time-entry';
+    el.innerHTML = `
+      <div class="time-details">
+        <div class="time">${rec.time}</div>
+        <div class="weather-info">
+          <span class="weather-item">🌡️ ${rec.temp}°F</span>
+          <span class="weather-item">💧 ${rec.precip}%</span>
+          <span class="weather-item">💨 ${rec.wind}mph</span>
+        </div>
+        <div class="score-badge ${rec.className}">${rec.score}/10</div>
+      </div>
+      <button class="start-walk-btn" data-time-index="${rec.hourIndex}">Start Walk</button>
+    `;
+    grid.appendChild(el);
+  });
+
+  walkTimesContainer.appendChild(grid);
+  resultsSection.classList.remove('hidden');
+}
+
+// Update the walk timer display
 export function updateTimerDisplay(seconds) {
-    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
-    timerDisplay.textContent = `${minutes}:${remainingSeconds}`;
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
+  timerDisplay.textContent = `${mm}:${ss}`;
 }
 
-// Update active pace button
+// Highlight the currently selected walking pace
 export function updateActivePaceButton(activePace) {
-    paceControls.querySelectorAll('.pace-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.pace === activePace);
-    });
+  paceControls.querySelectorAll('.pace-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.pace === activePace);
+    btn.setAttribute('aria-pressed', String(btn.dataset.pace === activePace));
+  });
 }
 
+// Show the Spotify player and track list, or a loading placeholder
 export function renderPlaylist(playlistData) {
-    if (!playlistData || !playlistData.embedUrl) {
-        spotifyEmbedContainer.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #666;">
-                <p>🎵 Music streaming service temporarily unavailable</p>
-                <p style="font-size: 14px; margin-top: 8px;">Service may resume shortly</p>
-            </div>`;
-        return;
-    }
+  if (!playlistData || (!playlistData.embedUrl && !(playlistData.tracks?.length))) {
+    spotifyEmbedContainer.innerHTML = `
+      <div class="player-skeleton">
+        <div class="skeleton-bar"></div>
+        <div class="skeleton-list">
+          <div class="skeleton-item"></div>
+          <div class="skeleton-item"></div>
+          <div class="skeleton-item"></div>
+        </div>
+      </div>`;
+    return;
+  }
 
-    const embedPlayer = `
-        <iframe style="border-radius:12px"
-        src="${playlistData.embedUrl}"
-        width="100%" height="352" frameBorder="0" allowfullscreen=""
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"></iframe>`;
+  let trackListHtml = '';
+  if (playlistData.tracks?.length) {
+    trackListHtml = `
+      <div class="track-list">
+        ${playlistData.tracks.slice(0, 8).map(t => `
+          <a class="track-row" href="${t.url}" target="_blank" rel="noopener">
+            <img class="track-art" src="${t.image || ''}" alt="" />
+            <div class="track-meta">
+              <div class="track-name">${t.name}</div>
+              <div class="track-artist">${t.artists}</div>
+            </div>
+            <span class="track-open">↗</span>
+          </a>
+        `).join('')}
+      </div>`;
+  }
 
-    spotifyEmbedContainer.innerHTML = embedPlayer;
+  const embed = playlistData.embedUrl
+    ? `<iframe class="player-embed"
+         src="${playlistData.embedUrl}"
+         frameBorder="0" allowfullscreen
+         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+         loading="lazy"></iframe>`
+    : '';
+
+  spotifyEmbedContainer.innerHTML = `
+    <div class="player-card">
+      ${embed}
+      ${trackListHtml}
+    </div>`;
 }
 
-export function renderSummary(durationInSeconds) {
-    const totalMinutes = Math.floor(durationInSeconds / 60);
-    summaryDuration.textContent = `${totalMinutes} minute${totalMinutes !== 1 ? 's' : ''}`;
+// Show the walk summary with duration and saved playlist
+export function renderSummary(durationInSeconds, petName = 'your pup') {
+  const mins = Math.floor(durationInSeconds / 60);
+  summaryDuration.textContent = `${mins} minute${mins === 1 ? '' : 's'}`;
+  
+  const petNameDisplay = document.getElementById('pet-name-display');
+  if (petNameDisplay) {
+    petNameDisplay.textContent = petName;
+  }
 
-    const activePlaylist = spotifyEmbedContainer.querySelector('iframe');
-    if (activePlaylist) {
-        summaryPlaylist.innerHTML = '';
-        summaryPlaylist.appendChild(activePlaylist.cloneNode(true));
-    }
+  const iframe = spotifyEmbedContainer.querySelector('iframe');
+  summaryPlaylist.innerHTML = '';
+  if (iframe) summaryPlaylist.appendChild(iframe.cloneNode(true));
 }
 
-
-
+// Set up the trivia game interface
 export function renderTrivia(question, options, correctAnswer) {
-    triviaQuestion.textContent = question;
-    triviaOptions.innerHTML = '';
-    nextTriviaBtn.classList.add('hidden');
+  triviaQuestion.textContent = question;
+  triviaOptions.innerHTML = '';
+  nextTriviaBtn.classList.add('hidden');
 
-    options.forEach(option => {
-        const answerButton = document.createElement('button');
-        answerButton.className = 'trivia-option';
-        answerButton.textContent = option;
-        answerButton.onclick = () => {
-            document.querySelectorAll('.trivia-option').forEach(btn =>
-                btn.classList.add('disabled'));
+  options.forEach(option => {
+    const btn = document.createElement('button');
+    btn.className = 'trivia-option';
+    btn.textContent = option;
+    btn.onclick = () => {
+      document.querySelectorAll('.trivia-option').forEach(b => b.classList.add('disabled'));
+      (option === correctAnswer ? btn.classList.add('correct') : btn.classList.add('incorrect'));
+      nextTriviaBtn.classList.remove('hidden');
+    };
+    triviaOptions.appendChild(btn);
+  });
+}
 
-            if (option === correctAnswer) {
-                answerButton.classList.add('correct');
-            } else {
-                answerButton.classList.add('incorrect');
-            }
+export function renderBreedPhotoGame(imageUrl, question, options, correctAnswer) {
+  triviaQuestion.textContent = question;
+  triviaOptions.innerHTML = '';
+  nextTriviaBtn.classList.add('hidden');
 
-            nextTriviaBtn.classList.remove('hidden');
-        };
-        triviaOptions.appendChild(answerButton);
-    });
+  const imgWrap = document.createElement('div');
+  imgWrap.className = 'breed-image-container';
+  imgWrap.innerHTML = `<img src="${imageUrl}" alt="Dog breed to guess" class="breed-image">`;
+  triviaOptions.appendChild(imgWrap);
+
+  options.forEach(option => {
+    const btn = document.createElement('button');
+    btn.className = 'trivia-option';
+    btn.textContent = option;
+    btn.onclick = () => {
+      document.querySelectorAll('.trivia-option').forEach(b => b.classList.add('disabled'));
+      (option === correctAnswer ? btn.classList.add('correct') : btn.classList.add('incorrect'));
+      nextTriviaBtn.classList.remove('hidden');
+    };
+    triviaOptions.appendChild(btn);
+  });
 }
 

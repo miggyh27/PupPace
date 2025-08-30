@@ -15,7 +15,7 @@ Just start a walk, pick your speed, and PupPace creates a Spotify playlist that 
 * **Post-Walk Summary**: Shows you how long you walked and saves your custom playlist.
 * **Dog Breed Trivia**: Fun quiz game to play while you're out walking.
 
-## 🛠️ Tech Stack
+## 🛠️ What I Used
 
 * **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 * **Build Tool**: Vite
@@ -26,9 +26,9 @@ Just start a walk, pick your speed, and PupPace creates a Spotify playlist that 
 
 ## 🚀 Getting Started
 
-Here's how to get this running locally.
+Here's how to get this running on your computer.
 
-### Prerequisites
+### What You Need
 
 * Node.js and npm
 * Modern web browser
@@ -36,18 +36,18 @@ Here's how to get this running locally.
 
 ### Installation & Setup
 
-1.  **Clone the repo:**
+1.  **Get the code:**
     ```bash
     git clone https://github.com/your-username/puppace.git
     cd puppace
     ```
 
-2.  **Install dependencies:**
+2.  **Install the packages:**
     ```bash
     npm install
     ```
 
-3.  **Set up your API keys:**
+3.  **Get your API keys:**
     * Create a `.env` file in the project root
     * Copy from `.env.example`
     * Get your keys from [Spotify Dashboard](https://developer.spotify.com/dashboard/) and [TheDogAPI](https://thedogapi.com/signup)
@@ -58,7 +58,7 @@ Here's how to get this running locally.
         THEDOGAPI_KEY=YourDogAPIKey
         ```
 
-4.  **Start the dev server:**
+4.  **Start the app:**
     ```bash
     npm run dev
     ```
