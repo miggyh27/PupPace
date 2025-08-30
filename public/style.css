@@ -67,7 +67,7 @@ body{
 
 /* Layout */
 #app-container{
-  max-width: 480px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 24px 18px 60px;
   min-height: 100vh;
@@ -182,7 +182,22 @@ button.secondary{ background: none; color: var(--accent); border: 2px solid rgba
 #benji-label{ font-weight:700; font-size:1.05rem; color: var(--muted); }
 
 /* Walk windows */
-.walk-times-grid{ display:grid; grid-template-columns: 1fr; gap: 14px; margin-top:10px; }
+.walk-times-grid{ 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 14px; 
+  margin-top: 10px; 
+}
+
+@media (max-width: 768px) {
+  #app-container {
+    max-width: 100%;
+    padding: 16px 12px 40px;
+  }
+  .walk-times-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .walk-time-entry{
   background: var(--bg-elev); border: var(--hairline); border-radius: 16px; padding: 14px;
   backdrop-filter: var(--glass); transition: transform .15s ease, box-shadow .2s ease; box-shadow: var(--shadow-sm);
@@ -194,12 +209,36 @@ button.secondary{ background: none; color: var(--accent); border: 2px solid rgba
 .score-badge.score-great{ background: rgba(48,209,88,0.18); color: var(--good); }
 .score-badge.score-good{ background: rgba(255,214,10,0.18); color: #9a7b00; }
 .score-badge.score-poor{ background: rgba(255,69,58,0.18); color: var(--bad); }
+
+/* Reason chips and suggestions */
+.chips{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 4px; }
+.reason-chip{
+  padding: 6px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600;
+  color: var(--text); background: rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+@media (prefers-color-scheme: dark){
+  .reason-chip{ background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.06); }
+}
+.suggest{ font-size: .9rem; color: var(--muted); margin-top: 4px; }
+
 .start-walk-btn{ background: linear-gradient(180deg, #00d1ff, #00a8e8); box-shadow: 0 10px 20px rgba(0,162,233,0.25), inset 0 1px 0 rgba(255,255,255,0.2); font-size: .95rem; }
 
 /* Highlighted window */
 .walk-time-entry.top-recommendation{
   background: linear-gradient(135deg, rgba(94,92,230,0.22), rgba(0,194,255,0.22));
   border: 1px solid rgba(94,92,230,0.35); box-shadow: 0 14px 30px rgba(94,92,230,0.25); color: var(--text);
+}
+
+/* Best next walk */
+.walk-time-entry.best-next{
+  background: linear-gradient(135deg, rgba(240,147,251,0.22), rgba(245,87,108,0.22));
+  border: 1px solid rgba(240,147,251,0.35); box-shadow: 0 14px 30px rgba(240,147,251,0.25); color: var(--text);
+  transform: scale(1.02);
+}
+
+.walk-time-entry.best-next:hover {
+  transform: scale(1.03) translateY(-2px);
 }
 
 /* Active walk */

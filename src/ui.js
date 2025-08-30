@@ -1,6 +1,6 @@
-// All the UI functions for showing/hiding stuff and handling user input
+// ui stuff - showing/hiding things and handling clicks
 
-// Grab references to important page elements
+// get all the page elements we need
 const loader = document.getElementById('loader');
 const errorContainer = document.getElementById('error-container');
 const breedInput = document.getElementById('breed-input');
@@ -19,7 +19,7 @@ const triviaQuestion = document.getElementById('trivia-question');
 const triviaOptions = document.getElementById('trivia-options');
 const nextTriviaBtn = document.getElementById('next-trivia-btn');
 
-// Show/hide the loading spinner
+// show/hide loading spinner
 export function showLoader() {
   loader.classList.remove('hidden');
   errorContainer.classList.add('hidden');
@@ -29,14 +29,14 @@ export function hideLoader() {
   loader.classList.add('hidden');
 }
 
-// Show error messages to the user
+// show error messages
 export function displayError(message) {
   hideLoader();
   errorContainer.textContent = `⚠️ ${message}`;
   errorContainer.classList.remove('hidden');
 }
 
-// Set up breed search with keyboard navigation and suggestions
+// breed search with suggestions
 export function setupBreedAutocomplete(breeds, initial = '') {
   if (initial) breedInput.value = initial;
 
@@ -133,7 +133,9 @@ function updateFocus(nodes, i) {
   nodes.forEach(n => n.classList.remove('focused'));
   if (nodes[i]) nodes[i].classList.add('focused');
 }
-function escapeHtml(s) { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeHtml(s) { 
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); 
+}
 
 // Show the weather forecast and best walking times
 export function renderWalkTimes(walk, location) {
@@ -145,6 +147,45 @@ export function renderWalkTimes(walk, location) {
   benjiScoreEl.className = `score-circle ${className}`;
 
   walkTimesContainer.innerHTML = '';
+
+  // Add best next hour if available
+  if (walk.bestNext) {
+    const bestNextHeader = document.createElement('h4');
+    bestNextHeader.textContent = '⭐ Best Next Walk';
+    walkTimesContainer.appendChild(bestNextHeader);
+
+    const bestNextGrid = document.createElement('div');
+    bestNextGrid.className = 'walk-times-grid';
+
+    const bestNextEl = document.createElement('div');
+    bestNextEl.className = 'walk-time-entry best-next';
+    
+    const chipHtml = (walk.bestNext.reasons || []).slice(0,3).map(t => `<span class="reason-chip">${escapeHtml(t)}</span>`).join('');
+    const suggestHtml = walk.bestNext.suggest
+      ? `<div class="suggest">Suggested: <strong>${escapeHtml(walk.bestNext.suggest.pace)}</strong> · ${walk.bestNext.suggest.duration} min</div>`
+      : '';
+    
+    const timeQuality = walk.bestNext.timePreference >= 0.9 ? 'Perfect time' : 
+                       walk.bestNext.timePreference >= 0.7 ? 'Good time' : 
+                       walk.bestNext.timePreference >= 0.5 ? 'Okay time' : 'Late time';
+    
+    bestNextEl.innerHTML = `
+      <div class="time-details">
+        <div class="time">${escapeHtml(walk.bestNext.time)} · ${escapeHtml(timeQuality)}</div>
+        <div class="weather-info">
+          <span class="weather-item">🌡️ ${walk.bestNext.temp}°F</span>
+          <span class="weather-item">💧 ${walk.bestNext.precip}%</span>
+          <span class="weather-item">💨 ${walk.bestNext.wind}mph</span>
+        </div>
+        <div class="score-badge ${walk.bestNext.className}">${walk.bestNext.score}/10</div>
+        <div class="chips">${chipHtml}</div>
+        ${suggestHtml}
+      </div>
+      <button class="start-walk-btn" data-time-index="${walk.bestNext.hourIndex}">Start Walk</button>
+    `;
+    bestNextGrid.appendChild(bestNextEl);
+    walkTimesContainer.appendChild(bestNextGrid);
+  }
 
   const grid = document.createElement('div');
   grid.className = 'walk-times-grid';
@@ -159,12 +200,12 @@ export function renderWalkTimes(walk, location) {
       el.className = 'walk-time-entry top-recommendation';
       el.innerHTML = `
         <div class="time-details">
-          <div class="time">${win.startTime}–${win.endTime} · ${win.label}</div>
+          <div class="time">${escapeHtml(win.time)} · ${escapeHtml(win.label)}</div>
           <div class="weather-info">
-            <span class="weather-item">Avg score: ${win.avgScore}</span>
+            <span class="weather-item">Avg score: ${win.avg}</span>
             <span class="weather-item">Length: ${win.length}h</span>
           </div>
-          <div class="score-badge score-great">${win.best}/10</div>
+          <div class="score-badge ${win.className}">${win.score}/10</div>
         </div>
         <button class="start-walk-btn" data-time-index="${win.startIndex}" title="Start at the beginning of this window">Start Walk</button>
       `;
@@ -179,15 +220,23 @@ export function renderWalkTimes(walk, location) {
   walk.currentAndNext.forEach(rec => {
     const el = document.createElement('div');
     el.className = 'walk-time-entry';
+    
+    const chipHtml = (rec.reasons || []).slice(0,3).map(t => `<span class="reason-chip">${escapeHtml(t)}</span>`).join('');
+    const suggestHtml = rec.suggest
+      ? `<div class="suggest">Suggested: <strong>${escapeHtml(rec.suggest.pace)}</strong> · ${rec.suggest.duration} min</div>`
+      : '';
+    
     el.innerHTML = `
       <div class="time-details">
-        <div class="time">${rec.time}</div>
+        <div class="time">${escapeHtml(rec.time)}</div>
         <div class="weather-info">
           <span class="weather-item">🌡️ ${rec.temp}°F</span>
           <span class="weather-item">💧 ${rec.precip}%</span>
           <span class="weather-item">💨 ${rec.wind}mph</span>
         </div>
         <div class="score-badge ${rec.className}">${rec.score}/10</div>
+        <div class="chips">${chipHtml}</div>
+        ${suggestHtml}
       </div>
       <button class="start-walk-btn" data-time-index="${rec.hourIndex}">Start Walk</button>
     `;
@@ -236,8 +285,8 @@ export function renderPlaylist(playlistData) {
           <a class="track-row" href="${t.url}" target="_blank" rel="noopener">
             <img class="track-art" src="${t.image || ''}" alt="" />
             <div class="track-meta">
-              <div class="track-name">${t.name}</div>
-              <div class="track-artist">${t.artists}</div>
+                      <div class="track-name">${escapeHtml(t.name)}</div>
+        <div class="track-artist">${escapeHtml(t.artists)}</div>
             </div>
             <span class="track-open">↗</span>
           </a>

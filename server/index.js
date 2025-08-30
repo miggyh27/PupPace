@@ -1,11 +1,37 @@
-// Simple proxy server to keep Spotify secrets safe
+// proxy server to keep spotify secrets safe
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 
 const app = express();
-app.use(cors()); // could lock this down to just the frontend later
+app.use(cors());
 app.use(express.json());
+
+// rate limiting - 100 requests per minute per IP
+const requestCounts = new Map();
+const RATE_LIMIT = 100;
+const RATE_WINDOW = 60 * 1000;
+
+function rateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  const windowStart = now - RATE_WINDOW;
+  
+  if (!requestCounts.has(ip)) {
+    requestCounts.set(ip, []);
+  }
+  
+  const requests = requestCounts.get(ip);
+  const recentRequests = requests.filter(time => time > windowStart);
+  
+  if (recentRequests.length >= RATE_LIMIT) {
+    return res.status(429).json({ error: 'Too many requests' });
+  }
+  
+  recentRequests.push(now);
+  requestCounts.set(ip, recentRequests);
+  next();
+}
 
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, PORT = 8787 } = process.env;
 
@@ -14,6 +40,7 @@ if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
   process.exit(1);
 }
 
+// cache the token so we don't hit spotify's auth endpoint every time
 let _token = null;
 let _tokenExpiresAt = 0;
 
@@ -42,12 +69,12 @@ async function getAppToken() {
   return _token;
 }
 
-// Spotify recommendations endpoint - takes genres, tempo, etc
-app.get('/api/spotify/recommendations', async (req, res) => {
+// spotify recommendations endpoint
+app.get('/api/spotify/recommendations', rateLimit, async (req, res) => {
   try {
     const token = await getAppToken();
 
-    // Only allow these specific params to pass through
+    // only allow certain params
     const allowed = [
       'seed_artists', 'seed_tracks', 'seed_genres',
       'limit',
@@ -57,7 +84,12 @@ app.get('/api/spotify/recommendations', async (req, res) => {
     ];
     const params = new URLSearchParams();
     for (const k of allowed) {
-      if (req.query[k] != null && req.query[k] !== '') params.set(k, String(req.query[k]));
+      if (req.query[k] != null && req.query[k] !== '') {
+        const value = String(req.query[k]).trim();
+        if (value.length > 0 && value.length < 100) {
+          params.set(k, value);
+        }
+      }
     }
     if (!params.get('limit')) params.set('limit', '20');
 
@@ -82,12 +114,13 @@ app.get('/api/spotify/recommendations', async (req, res) => {
 
     res.json({ tracks });
   } catch (e) {
-    res.status(500).json({ error: String(e.message || e) });
+    console.error('Spotify API error:', e.message);
+    res.status(500).json({ error: 'Music service unavailable' });
   }
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
-  console.log(`PupCast server running on http://localhost:${PORT}`);
+  console.log(`PupPace server running on http://localhost:${PORT}`);
 });

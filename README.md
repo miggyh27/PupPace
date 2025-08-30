@@ -1,19 +1,19 @@
 # PupPace: Your Smart Walk & Run Companion
 
-PupPace is a web app I built for dog owners that makes your daily walks way more fun. It checks the weather and your dog's breed to suggest the best times to go out, and then acts as your walking buddy with music that changes based on your pace.
+PupPace is a web app for dog owners that makes walks more fun. It checks the weather and your dog's breed to suggest the best times to go out, then acts as your walking buddy with music that matches your pace.
 
 Just start a walk, pick your speed, and PupPace creates a Spotify playlist that keeps up with you.
 
 ## ✨ Features
 
-* **Smart Walk Planner**: Figures out the best times to walk based on weather and what your dog likes.
-* **The Benji Meter**: Simple color-coded safety score for the current weather.
+* **Smart Walk Planner**: Finds the best times to walk based on weather and your dog's breed
+* **The Benji Meter**: Color-coded safety score for current weather
 * **Active Walk Mode**:
-    * **Live Timer**: Keeps track of how long you've been walking.
-    * **Pace Control**: Pick your intensity (Stroll, Brisk, Jog) and the music changes right away.
-    * **Dynamic PupPace Playlists**: Creates Spotify playlists based on weather, your dog's energy, and how fast you're walking.
-* **Post-Walk Summary**: Shows you how long you walked and saves your custom playlist.
-* **Dog Breed Trivia**: Fun quiz game to play while you're out walking.
+    * **Live Timer**: Tracks how long you've been walking
+    * **Pace Control**: Pick your speed (Stroll, Brisk, Jog) and music changes
+    * **Dynamic Playlists**: Spotify playlists based on weather, dog energy, and pace
+* **Post-Walk Summary**: Shows walk duration and saves your playlist
+* **Dog Breed Trivia**: Fun quiz game while walking
 
 ## 🛠️ What I Used
 
@@ -26,15 +26,13 @@ Just start a walk, pick your speed, and PupPace creates a Spotify playlist that 
 
 ## 🚀 Getting Started
 
-Here's how to get this running on your computer.
-
 ### What You Need
 
 * Node.js and npm
 * Modern web browser
 * API keys from Spotify and TheDogAPI
 
-### Installation & Setup
+### Setup
 
 1.  **Get the code:**
     ```bash
@@ -42,15 +40,14 @@ Here's how to get this running on your computer.
     cd puppace
     ```
 
-2.  **Install the packages:**
+2.  **Install packages:**
     ```bash
     npm install
     ```
 
-3.  **Get your API keys:**
+3.  **Get API keys:**
     * Create a `.env` file in the project root
-    * Copy from `.env.example`
-    * Get your keys from [Spotify Dashboard](https://developer.spotify.com/dashboard/) and [TheDogAPI](https://thedogapi.com/signup)
+    * Get keys from [Spotify Dashboard](https://developer.spotify.com/dashboard/) and [TheDogAPI](https://thedogapi.com/signup)
     * Add them to your `.env` file:
         ```env
         SPOTIFY_CLIENT_ID=YourSpotifyClientID

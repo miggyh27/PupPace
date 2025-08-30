@@ -1,9 +1,10 @@
 import * as api from './api.js';
 import * as ui from './ui.js';
+import { scoreDay } from './scoring.js';
 
 const { VITE_THEDOGAPI_KEY } = import.meta.env;
 
-const PERSIST_KEY = 'pupcast_state_v2';
+const PERSIST_KEY = 'puppace_state_v2';
 
 const state = {
   spotifyAccessToken: null,
@@ -58,159 +59,60 @@ function switchView(viewName) {
   if (firstFocusable) firstFocusable.focus({ preventScroll: true });
 }
 
-// Figure out the best walking times by scoring each hour and finding good windows
+// use the new scoring that considers breed differences
 function processWeatherData(weatherData, selectedBreed = null) {
-  const hourly = weatherData.hourly;
-  const now = Date.now();
-
-  // Find where we are in the hourly data (Open-Meteo uses local time)
-  let currentIndex = 0;
-  for (let i = 0; i < hourly.time.length; i++) {
-    if (new Date(hourly.time[i]).getTime() >= now) { currentIndex = i; break; }
-  }
-
-  const allHourScores = [];
-  for (let i = 0; i < hourly.time.length; i++) {
-    const ts = new Date(hourly.time[i]);
-    const hour = ts.getHours();
-
-    const tempC = hourly.temperature_2m[i];
-    const tempF = Math.round((tempC * 9) / 5 + 32);
-    const rh = hourly.relative_humidity_2m?.[i] ?? null;
-    const uv = hourly.uv_index?.[i] ?? null;
-    const precip = hourly.precipitation_probability?.[i] ?? 0;
-    const wind = Math.round(hourly.wind_speed_10m?.[i] ?? 0);
-    const wxCode = hourly.weathercode?.[i] ?? 0;
-
-    const scoreObj = calculateBenjiScore({
-      tempF, rh, windMph: wind, precip, hour, uvIndex: uv, weathercode: wxCode,
-      breed: selectedBreed
-    });
-
-    allHourScores.push({
-      time: ts.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-      temp: tempF,
-      precip,
-      wind,
-      hourIndex: i,
-      score: scoreObj.score,
-      label: scoreObj.label,
-      className: scoreObj.className
-    });
-  }
-
-  // Find stretches of good weather (score 6+) and rank them by length and quality
-  const windows = [];
-  let start = null, sum = 0, count = 0;
-  for (let i = 0; i < allHourScores.length; i++) {
-    const s = allHourScores[i].score;
-    if (s >= 6) {
-      if (start === null) start = i;
-      sum += s; count += 1;
-    } else if (start !== null) {
-      windows.push(makeWindow(allHourScores, start, i - 1, sum / count));
-      start = null; sum = 0; count = 0;
-    }
-  }
-  if (start !== null) windows.push(makeWindow(allHourScores, start, allHourScores.length - 1, sum / count));
-  const rankedWindows = windows
-    .map(w => ({ ...w, goodness: w.avgScore * (1 + (w.length - 1) * 0.12) }))
-    .sort((a, b) => b.goodness - a.goodness);
-
-  const benjiMeter = allHourScores[currentIndex] || allHourScores[0];
-  const topRecommendations = rankedWindows.slice(0, 4);
-  const currentAndNext = allHourScores.slice(currentIndex, currentIndex + 12);
-
-  return { benjiMeter, topRecommendations, currentAndNext };
-}
-
-function makeWindow(scores, i0, i1, avgScore) {
+  const scored = scoreDay(weatherData, selectedBreed);
+  
   return {
-    startIndex: i0,
-    endIndex: i1,
-    length: i1 - i0 + 1,
-    avgScore: Math.round(avgScore * 10) / 10,
-    startTime: scores[i0].time,
-    endTime: scores[i1].time,
-    best: Math.max(...scores.slice(i0, i1 + 1).map(s => s.score)),
-    label: avgScore >= 8 ? 'Great' : avgScore >= 6.5 ? 'Good' : 'Okay'
+    benjiMeter: {
+      score: scored.current.shapedScore,
+      label: scoreLabel(scored.current.shapedScore),
+      className: scoreClass(scored.current.shapedScore)
+    },
+    bestNext: scored.bestNext ? {
+      time: scored.bestNext.timeLabel,
+      temp: Math.round(((weatherData.hourly.temperature_2m[scored.bestNext.hourIndex]) * 9) / 5 + 32),
+      precip: weatherData.hourly.precipitation_probability?.[scored.bestNext.hourIndex] ?? 0,
+      wind: Math.round((weatherData.hourly.wind_speed_10m?.[scored.bestNext.hourIndex] ?? 0)),
+      hourIndex: scored.bestNext.hourIndex,
+      score: scored.bestNext.shapedScore,
+      label: scoreLabel(scored.bestNext.shapedScore),
+      className: scoreClass(scored.bestNext.shapedScore),
+      reasons: scored.bestNext.reasons,
+      suggest: scored.bestNext.suggest,
+      adjustedScore: scored.bestNext.adjustedScore,
+      timePreference: scored.bestNext.timePreference
+    } : null,
+    topRecommendations: scored.windows.map(w => ({
+      startIndex: w.startIndex,
+      time: `${w.startTime}–${w.endTime}`,
+      score: w.best,
+      label: w.label,
+      className: scoreClass(w.best),
+      avg: w.avgScore,
+      length: w.length
+    })),
+    currentAndNext: scored.next12.map(r => ({
+      time: r.timeLabel,
+      temp: Math.round(((weatherData.hourly.temperature_2m[r.hourIndex]) * 9) / 5 + 32),
+      precip: weatherData.hourly.precipitation_probability?.[r.hourIndex] ?? 0,
+      wind: Math.round((weatherData.hourly.wind_speed_10m?.[r.hourIndex] ?? 0)),
+      hourIndex: r.hourIndex,
+      score: r.shapedScore,
+      label: scoreLabel(r.shapedScore),
+      className: scoreClass(r.shapedScore),
+      reasons: r.reasons,
+      suggest: r.suggest
+    }))
   };
 }
 
-// Weather safety score for dogs - looks at temp, humidity, wind, UV, and breed traits
-function calculateBenjiScore({ tempF, rh, windMph, precip, hour, uvIndex, weathercode, breed }) {
-  let score = 10;
+function scoreClass(s){ return s>=8 ? 'score-great' : s>=6 ? 'score-good' : 'score-poor'; }
+function scoreLabel(s){ return s>=9 ? 'Perfect!' : s>=8 ? 'Great!' : s>=6 ? 'Good' : s>=4 ? 'Okay' : 'Not Ideal'; }
 
-  // Time of day matters - late night/early morning is harder to see
-  if (hour >= 22 || hour <= 5) score -= 3.5;
-  else if (hour >= 6 && hour <= 8) score -= 0.5;
-  else if (hour >= 18 && hour <= 21) score += 0.5;
 
-  // Calculate what it actually feels like outside
-  const heatIdx = rh != null ? heatIndexF(tempF, rh) : tempF;
-  const feelsLikeHot = Math.max(tempF, heatIdx);
-  const windCh = windChillF(tempF, windMph);
-  const feelsLikeCold = Math.min(tempF, windCh);
 
-  if (feelsLikeHot > 100 || feelsLikeCold < 5) score -= 6;
-  else if (feelsLikeHot > 90 || feelsLikeCold < 15) score -= 4;
-  else if (feelsLikeHot > 80 || feelsLikeCold < 32) score -= 2;
-  else if (feelsLikeCold >= 45 && feelsLikeHot <= 80) score += 1.5;
 
-  // Humidity and UV
-  if (rh != null) {
-    if (rh > 80 && tempF >= 75) score -= 1.5;
-    else if (rh > 65 && tempF >= 80) score -= 1.0;
-  }
-  if (uvIndex != null) {
-    if (uvIndex >= 8) score -= 1.5;
-    else if (uvIndex >= 6) score -= 0.5;
-  }
-
-  // Precipitation and wind
-  if (precip > 70) score -= 3;
-  else if (precip > 50) score -= 2;
-  else if (precip > 30) score -= 1;
-
-  if (windMph > 30) score -= 2.5;
-  else if (windMph > 20) score -= 1.5;
-  else if (windMph > 12) score -= 0.5;
-
-  // Adjust for different dog types - rough guesses based on breed names
-  const name = (breed?.name || '').toLowerCase();
-  const isBrachy = /(bulldog|pug|boxer|pekingese|shi[h]? tzu|mastiff)/.test(name);
-  const snowDog = /(husky|malamute|samoyed|bernese|akita)/.test(name);
-  const tiny = /(chihuahua|pomeranian|toy|miniature)/.test(name);
-
-  if (isBrachy && tempF >= 75) score -= 1.0;
-  if (snowDog && tempF >= 85) score -= 1.0;
-  if (snowDog && tempF <= 35) score += 0.5;
-  if (tiny && tempF <= 40) score -= 0.5;
-
-  // Thunderstorms
-  if (weathercode >= 95) score -= 2;
-
-  // Keep score between 0-10 and pick a label
-  score = Math.max(0, Math.min(10, Math.round(score * 10) / 10));
-
-  let label = 'Not Ideal', className = 'score-poor';
-  if (score >= 8.5) { label = 'Perfect!'; className = 'score-great'; }
-  else if (score >= 7) { label = 'Great!'; className = 'score-great'; }
-  else if (score >= 5.5) { label = 'Good'; className = 'score-good'; }
-  else if (score >= 3.5) { label = 'Okay'; className = 'score-good'; }
-
-  return { score: Math.round(score), label, className };
-}
-
-// NOAA heat index formula (temperature in °F)
-function heatIndexF(T, R) {
-  const c1=-42.379,c2=2.04901523,c3=10.14333127,c4=-0.22475541,c5=-6.83783e-3,c6=-5.481717e-2,c7=1.22874e-3,c8=8.5282e-4,c9=-1.99e-6;
-  return c1+c2*T+c3*R+c4*T*R+c5*T*T+c6*R*R+c7*T*T*R+c8*T*R*R+c9*T*T*R*R;
-}
-function windChillF(T, V) {
-  if (T > 50 || V < 3) return T;
-  return 35.74 + 0.6215*T - 35.75*Math.pow(V,0.16) + 0.4275*T*Math.pow(V,0.16);
-}
 
 function getDistinctRandom(items, n, exceptId) {
   const pool = items.filter(b => b.id !== exceptId);
@@ -254,8 +156,19 @@ async function handlePlanWalk() {
   const petName = document.getElementById('pet-name-input').value.trim();
   const breedName = document.getElementById('breed-input').value.trim();
 
+  // validate inputs
   if (!city || !breedName) {
     ui.displayError('Please enter a city and breed name.');
+    return;
+  }
+  
+  if (city.length > 100 || breedName.length > 100) {
+    ui.displayError('City and breed names must be under 100 characters.');
+    return;
+  }
+  
+  if (!/^[a-zA-Z\s,.-]+$/.test(city) || !/^[a-zA-Z\s]+$/.test(breedName)) {
+    ui.displayError('Please use only letters, spaces, and basic punctuation.');
     return;
   }
   ui.showLoader();
@@ -429,4 +342,4 @@ document.addEventListener('DOMContentLoaded', () => {
   initialize();
 });
 
-export { processWeatherData, calculateBenjiScore };
+export { processWeatherData };

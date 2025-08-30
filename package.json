@@ -1,7 +1,7 @@
 {
   "name": "puppace",
-  "version": "1.0.0",
-  "description": "Smart dog walking companion with weather-aware music",
+  "version": "2.0.0",
+  "description": "weather-aware dog walking app with music",
   "type": "module",
   "scripts": {
     "dev": "vite",

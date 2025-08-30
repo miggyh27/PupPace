@@ -1,11 +1,11 @@
-// Functions for talking to external APIs and handling music
+// api calls and music stuff
 const {
   VITE_SPOTIFY_CLIENT_ID,
   VITE_THEDOGAPI_KEY,
-  VITE_SERVER_ORIGIN // e.g. http://localhost:8787
+  VITE_SERVER_ORIGIN
 } = import.meta.env;
 
-// Simple cache to avoid hitting APIs too much
+// cache stuff so we don't hit apis too much
 const LSC = {
   get(key) {
     try {
@@ -21,7 +21,7 @@ const LSC = {
   }
 };
 
-// OAuth stuff for later - not used right now but keeping it around
+// spotify oauth - not used yet but keeping it
 function getSpotifyToken() {
   const redirectUri = window.location.origin;
   const scope = 'user-read-private user-read-email';
@@ -37,7 +37,7 @@ function extractTokenFromUrl() {
   return params.get('access_token');
 }
 
-// Get list of dog breeds
+// get all dog breeds
 async function fetchDogBreeds() {
   const cached = LSC.get('dog_breeds_v1');
   if (cached) return cached;
@@ -51,13 +51,13 @@ async function fetchDogBreeds() {
   return json;
 }
 
-// Convert city name to coordinates using Open-Meteo
+// turn city name into coordinates
 async function fetchCoordinatesForCity(city) {
   const key = `geo_${city.toLowerCase()}`;
   const cached = LSC.get(key);
   if (cached) return cached;
 
-  // Handle inputs like "Chicago, Illinois" by just using the city part
+  // just use the city part if they put "city, state"
   const query = city.split(',')[0].trim();
 
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
@@ -75,7 +75,7 @@ async function fetchCoordinatesForCity(city) {
   return out;
 }
 
-// Get hourly weather forecast with all the data we need for scoring
+// get weather forecast with all the data we need
 async function fetchWeatherData(lat, lon) {
   const url = new URL('https://api.open-meteo.com/v1/forecast');
   url.search = new URLSearchParams({
@@ -85,16 +85,19 @@ async function fetchWeatherData(lat, lon) {
     forecast_days: '1',
     hourly: [
       'temperature_2m',
-      'relative_humidity_2m',
       'apparent_temperature',
+      'relative_humidity_2m',
       'uv_index',
       'precipitation_probability',
       'weathercode',
-      'wind_speed_10m'
-    ].join(',')
+      'wind_speed_10m',
+      'wind_gusts_10m',
+      'cloudcover'
+    ].join(','),
+    daily: ['sunrise','sunset','uv_index_max'].join(',')
   }).toString();
 
-  // Try a few times if it fails
+  // retry if it fails
   for (let attempt = 0; attempt < 3; attempt++) {
     const res = await fetch(url.toString());
     if (res.ok) return res.json();
@@ -106,6 +109,7 @@ async function fetchWeatherData(lat, lon) {
 // Convert walking pace to music tempo
 function mapPaceToTempo(pace) {
   return ({
+    quick:  { min_tempo: 140, max_tempo: 160, target_tempo: 150 },
     stroll: { min_tempo: 82, max_tempo: 108, target_tempo: 95 },
     brisk:  { min_tempo: 112, max_tempo: 128, target_tempo: 120 },
     jog:    { min_tempo: 132, max_tempo: 160, target_tempo: 142 }
