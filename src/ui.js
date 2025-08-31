@@ -1,5 +1,3 @@
-// ui stuff - showing/hiding things and handling clicks
-
 // get all the page elements we need
 const loader = document.getElementById('loader');
 const errorContainer = document.getElementById('error-container');
@@ -121,6 +119,15 @@ export function setupBreedAutocomplete(breeds, initial = '') {
     }
   });
 
+  function updateFocus(nodes, i) {
+    nodes.forEach(n => n.classList.remove('focused'));
+    if (nodes[i]) nodes[i].classList.add('focused');
+  }
+  function escapeHtml(s) { 
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); 
+  }
+
+  // hide suggestions when clicking outside
   document.addEventListener('click', (e) => {
     if (!breedInput.contains(e.target) && !breedSuggestions.contains(e.target)) {
       breedSuggestions.classList.add('hidden');
@@ -129,26 +136,18 @@ export function setupBreedAutocomplete(breeds, initial = '') {
   });
 }
 
-function updateFocus(nodes, i) {
-  nodes.forEach(n => n.classList.remove('focused'));
-  if (nodes[i]) nodes[i].classList.add('focused');
-}
-function escapeHtml(s) { 
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); 
-}
-
-// Show the weather forecast and best walking times
+// show the weather forecast and best walking times
 export function renderWalkTimes(walk, location) {
   locationName.textContent = location;
 
   const { score, label, className } = walk.benjiMeter;
   benjiScoreEl.textContent = score;
   benjiLabel.textContent = label;
-  benjiScoreEl.className = `score-circle ${className}`;
+  benjiScoreEl.className = `score-circle ${escapeHtml(className)}`;
 
   walkTimesContainer.innerHTML = '';
 
-  // Add best next hour if available
+  // add best next hour if available
   if (walk.bestNext) {
     const bestNextHeader = document.createElement('h4');
     bestNextHeader.textContent = '⭐ Best Next Walk';
@@ -177,7 +176,7 @@ export function renderWalkTimes(walk, location) {
           <span class="weather-item">💧 ${walk.bestNext.precip}%</span>
           <span class="weather-item">💨 ${walk.bestNext.wind}mph</span>
         </div>
-        <div class="score-badge ${walk.bestNext.className}">${walk.bestNext.score}/10</div>
+        <div class="score-badge ${escapeHtml(walk.bestNext.className)}">${walk.bestNext.score}/10</div>
         <div class="chips">${chipHtml}</div>
         ${suggestHtml}
       </div>
@@ -205,7 +204,7 @@ export function renderWalkTimes(walk, location) {
             <span class="weather-item">Avg score: ${win.avg}</span>
             <span class="weather-item">Length: ${win.length}h</span>
           </div>
-          <div class="score-badge ${win.className}">${win.score}/10</div>
+          <div class="score-badge ${escapeHtml(win.className)}">${win.score}/10</div>
         </div>
         <button class="start-walk-btn" data-time-index="${win.startIndex}" title="Start at the beginning of this window">Start Walk</button>
       `;
@@ -234,7 +233,7 @@ export function renderWalkTimes(walk, location) {
           <span class="weather-item">💧 ${rec.precip}%</span>
           <span class="weather-item">💨 ${rec.wind}mph</span>
         </div>
-        <div class="score-badge ${rec.className}">${rec.score}/10</div>
+        <div class="score-badge ${escapeHtml(rec.className)}">${rec.score}/10</div>
         <div class="chips">${chipHtml}</div>
         ${suggestHtml}
       </div>
@@ -247,14 +246,14 @@ export function renderWalkTimes(walk, location) {
   resultsSection.classList.remove('hidden');
 }
 
-// Update the walk timer display
+// update the walk timer display
 export function updateTimerDisplay(seconds) {
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
   const ss = String(seconds % 60).padStart(2, '0');
   timerDisplay.textContent = `${mm}:${ss}`;
 }
 
-// Highlight the currently selected walking pace
+// highlight the currently selected walking pace
 export function updateActivePaceButton(activePace) {
   paceControls.querySelectorAll('.pace-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.pace === activePace);
@@ -262,7 +261,7 @@ export function updateActivePaceButton(activePace) {
   });
 }
 
-// Show the Spotify player and track list, or a loading placeholder
+// show the spotify player and track list, or a loading placeholder
 export function renderPlaylist(playlistData) {
   if (!playlistData || (!playlistData.embedUrl && !(playlistData.tracks?.length))) {
     spotifyEmbedContainer.innerHTML = `
@@ -309,7 +308,7 @@ export function renderPlaylist(playlistData) {
     </div>`;
 }
 
-// Show the walk summary with duration and saved playlist
+// show the walk summary with duration and saved playlist
 export function renderSummary(durationInSeconds, petName = 'your pup') {
   const mins = Math.floor(durationInSeconds / 60);
   summaryDuration.textContent = `${mins} minute${mins === 1 ? '' : 's'}`;
@@ -324,7 +323,7 @@ export function renderSummary(durationInSeconds, petName = 'your pup') {
   if (iframe) summaryPlaylist.appendChild(iframe.cloneNode(true));
 }
 
-// Set up the trivia game interface
+// set up the trivia game interface
 export function renderTrivia(question, options, correctAnswer) {
   triviaQuestion.textContent = question;
   triviaOptions.innerHTML = '';
@@ -350,7 +349,7 @@ export function renderBreedPhotoGame(imageUrl, question, options, correctAnswer)
 
   const imgWrap = document.createElement('div');
   imgWrap.className = 'breed-image-container';
-  imgWrap.innerHTML = `<img src="${imageUrl}" alt="Dog breed to guess" class="breed-image">`;
+  imgWrap.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Dog breed to guess" class="breed-image">`;
   triviaOptions.appendChild(imgWrap);
 
   options.forEach(option => {

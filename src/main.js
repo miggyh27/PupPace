@@ -18,7 +18,6 @@ const state = {
   timerInterval: null,
   currentPace: 'brisk',
   walkDuration: 0,
-  // not saved to localStorage
   lastWalkWindowIndex: null
 };
 
@@ -59,7 +58,6 @@ function switchView(viewName) {
   if (firstFocusable) firstFocusable.focus({ preventScroll: true });
 }
 
-// use the new scoring that considers breed differences
 function processWeatherData(weatherData, selectedBreed = null) {
   const scored = scoreDay(weatherData, selectedBreed);
   
@@ -109,10 +107,6 @@ function processWeatherData(weatherData, selectedBreed = null) {
 
 function scoreClass(s){ return s>=8 ? 'score-great' : s>=6 ? 'score-good' : 'score-poor'; }
 function scoreLabel(s){ return s>=9 ? 'Perfect!' : s>=8 ? 'Great!' : s>=6 ? 'Good' : s>=4 ? 'Okay' : 'Not Ideal'; }
-
-
-
-
 
 function getDistinctRandom(items, n, exceptId) {
   const pool = items.filter(b => b.id !== exceptId);
@@ -183,7 +177,6 @@ async function handlePlanWalk() {
     const coords = await api.fetchCoordinatesForCity(city);
     state.location = coords.name;
 
-    // Get detailed weather data including humidity, UV, etc
     state.currentWeather = await api.fetchWeatherData(coords.latitude, coords.longitude);
 
     const walkWindows = processWeatherData(state.currentWeather, state.selectedBreed);
@@ -233,12 +226,12 @@ function handleNewWalk() {
   document.getElementById('results-section').classList.add('hidden');
 }
 
-// Get music recommendations - try our server first, fall back to curated playlists
+// try our server first, fall back to curated playlists
 async function updatePlaylist() {
   ui.renderPlaylist({});
 
   try {
-    // Figure out which hour's weather to use for music
+    // figure out which hour's weather to use for music
     const now = Date.now();
     const times = state.currentWeather?.hourly?.time || [];
     let idx = 0;
@@ -263,7 +256,7 @@ async function updatePlaylist() {
   }
 }
 
-// Set up the app - load data, connect events, restore previous session
+// load data, connect events, restore previous session
 async function initialize() {
   loadState();
   setupThemeToggle();
@@ -314,7 +307,7 @@ function setupEventListeners() {
   });
 }
 
-// Handle dark/light mode switching and save the choice
+// handle dark/light mode switching and save the choice
 function setupThemeToggle() {
   const themeToggle = document.getElementById('theme-toggle');
   const savedTheme = localStorage.getItem('puppace_theme') || 'dark';

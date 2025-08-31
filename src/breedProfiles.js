@@ -1,5 +1,3 @@
-// breed traits that affect weather tolerance
-
 const BRACHY = [
   'bulldog','french bulldog','english bulldog','american bulldog','pug',
   'boxer','pekingese','shih tzu','boston terrier','mastiff','cavalier king charles spaniel'
@@ -15,7 +13,7 @@ const SIGHTHOUNDS = [
 ];
 
 function parseAvg(value) {
-  // the dog api gives ranges like "55 - 65", so we average them
+  // dog api gives ranges like "55 - 65", so we average them
   if (typeof value === 'number') return value;
   if (!value) return null;
   const nums = String(value).match(/\d+(\.\d+)?/g);
