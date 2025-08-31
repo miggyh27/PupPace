@@ -4,7 +4,7 @@ PupPace is a web app for dog owners that makes walks more fun. It checks the wea
 
 Just start a walk, pick your speed, and PupPace creates a Spotify playlist that keeps up with you.
 
-## ✨ Features
+## Features
 
 * **Smart Walk Planner**: Finds the best times to walk based on weather and your dog's breed
 * **The Benji Meter**: Color-coded safety score for current weather
@@ -15,7 +15,7 @@ Just start a walk, pick your speed, and PupPace creates a Spotify playlist that 
 * **Post-Walk Summary**: Shows walk duration and saves your playlist
 * **Dog Breed Trivia**: Fun quiz game while walking
 
-## 🛠️ What I Used
+## What I Used
 
 * **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 * **Build Tool**: Vite
@@ -24,7 +24,7 @@ Just start a walk, pick your speed, and PupPace creates a Spotify playlist that 
     * [TheDogAPI](https://thedogapi.com/): Dog breed info
     * [Spotify Web API](https://developer.spotify.com/documentation/web-api): Music playlists
 
-## 🚀 Getting Started
+## Getting Started
 
 ### What You Need
 
